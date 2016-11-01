@@ -28,7 +28,6 @@ complementarBase G = C
 -- Dada una CadenaDNA devuelve la cadena complementaria
 complementarCadenaDNA :: CadenaDNA -> CadenaDNA
 complementarCadenaDNA [] = []
-complementarCadenaDNA [a] = [(complementarBase a)]
 complementarCadenaDNA xs = complementarBase (head xs) : complementarCadenaDNA (tail xs)
 
 -- Dada una CadenaDNA devuelve la cadena reverse
@@ -48,15 +47,37 @@ auxTrans (n : xs) = n : (auxTrans xs)
 
 sincronizaConCodonDeFin :: CadenaRNA -> Bool
 sincronizaConCodonDeFin [] = False
-sincronizaConCodonDeFin (U:(A:(A:xs))) = True
-sincronizaConCodonDeFin (U:(A:(G:xs))) = True
-sincronizaConCodonDeFin (U:(G:(A:xs))) = True
-sincronizaConCodonDeFin (x:(y:(z:xs))) = sincronizaConCodonDeFin xs
+sincronizaConCodonDeFin (U:A:A:xs) = True
+sincronizaConCodonDeFin (U:A:G:xs) = True
+sincronizaConCodonDeFin (U:G:A:xs) = True
+sincronizaConCodonDeFin (x:y:z:xs) = sincronizaConCodonDeFin xs
 sincronizaConCodonDeFin xs = False
 
 obtenerProteina :: CadenaRNA -> Proteina
 obtenerProteina [] = []
-obtenerProteina (x:(y:(z:xs))) = traducirCodonAAminoacido (x,y,z) : obtenerProteina xs
+obtenerProteina (x:y:z:xs) = (traducirCodonAAminoacido (x,y,z)) : (obtenerProteina xs)
+
+--Cada vez q encuentra un inicio guarda en una lista toda la cadena de ARN desde dicho inicio (sin tomar el inicio)
+--hasta el final de la cadena entera
+--Este programa toma TODOS los inicios
+fragmentarCadenaRNA :: CadenaRNA -> [CadenaRNA]
+fragmentarCadenaRNA [] = []
+fragmentarCadenaRNA (A:U:G:xs)  = [xs]++(fragmentarCadenaRNA xs)
+
+--Dada una lista de cadenas RNA, quita las q no tienen un codon de fin sincronizado
+limpiarListaDeCadenasRNA :: [CadenaRNA] -> [CadenaRNA]
+limpiarListaDeCadenasRNA [] = []
+limpiarListaDeCadenasRNA (c:xs)     |sincronizaConCodonDeFin c = c:(limpiarListaDeCadenasRNA xs)
+                                    |otherwise = limpiarListaDeCadenasRNA xs
+
+--Toma una cadena RNA y le quita el fin y todo lo que haya despues
+--Se asume que la cadena tiene un fin sincronizado
+quitarCola :: CadenaRNA -> CadenaRNA
+quitarCola (U:A:A:xs) = []
+quitarCola (U:A:G:xs) = []
+quitarCola (U:G:A:xs) = []
+quitarCola (n:xs) = n:(quitarCola xs)
+
 
 {-
 obtenerProteinaDeRNA :: CadenaRNA -> [Proteina]
